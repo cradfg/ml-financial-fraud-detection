@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from schemas import TransactionInput, PredictionOutput
-from model import predict
+from app.schemas import TransactionInput, PredictionOutput
+from app.model import predict
 
 app = FastAPI(
     title="ML Financial Fraud Detection API",
