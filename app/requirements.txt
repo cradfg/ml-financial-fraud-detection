@@ -8,3 +8,4 @@ scikit-learn==1.4.2
 joblib==1.4.2
 
 pydantic==2.7.4
+gdown==5.2.0
