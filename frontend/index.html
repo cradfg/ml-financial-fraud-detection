@@ -9,13 +9,11 @@
 </head>
 <body>
 
-  <!-- grid background -->
   <div class="grid-bg"></div>
   <div class="scanline"></div>
 
   <div class="shell">
 
-    <!-- header -->
     <header class="header">
       <div class="logo">
         <span class="logo-icon">⬡</span>
@@ -30,10 +28,9 @@
       </div>
     </header>
 
-    <!-- main grid -->
     <main class="main-grid">
 
-      <!-- left: form panel -->
+      <!-- LEFT: form -->
       <section class="panel form-panel">
         <div class="panel-header">
           <span class="panel-tag">INPUT</span>
@@ -75,12 +72,42 @@
             </div>
           </div>
 
+          <!-- email domain dropdown -->
           <div class="field-group">
-            <label class="field-label" for="P_emaildomain">
-              Purchaser Email Domain
-            </label>
-            <input type="text" id="P_emaildomain" name="P_emaildomain"
-              placeholder="e.g. gmail.com" />
+            <label class="field-label" for="P_emaildomain">Purchaser Email Domain</label>
+            <select id="P_emaildomain" name="P_emaildomain">
+              <option value="">— select —</option>
+              <option value="gmail.com">gmail.com</option>
+              <option value="yahoo.com">yahoo.com</option>
+              <option value="hotmail.com">hotmail.com</option>
+              <option value="outlook.com">outlook.com</option>
+              <option value="icloud.com">icloud.com</option>
+              <option value="live.com">live.com</option>
+              <option value="msn.com">msn.com</option>
+              <option value="aol.com">aol.com</option>
+              <option value="protonmail.com">protonmail.com</option>
+              <option value="me.com">me.com</option>
+              <option value="comcast.net">comcast.net</option>
+              <option value="verizon.net">verizon.net</option>
+              <option value="att.net">att.net</option>
+              <option value="sbcglobal.net">sbcglobal.net</option>
+              <option value="bellsouth.net">bellsouth.net</option>
+              <option value="cox.net">cox.net</option>
+              <option value="charter.net">charter.net</option>
+              <option value="earthlink.net">earthlink.net</option>
+              <option value="roadrunner.com">roadrunner.com</option>
+              <option value="optonline.net">optonline.net</option>
+              <option value="mac.com">mac.com</option>
+              <option value="ymail.com">ymail.com</option>
+              <option value="rocketmail.com">rocketmail.com</option>
+              <option value="anonymous.com">anonymous.com</option>
+              <option value="mail.com">mail.com</option>
+              <option value="aim.com">aim.com</option>
+              <option value="netzero.net">netzero.net</option>
+              <option value="frontier.com">frontier.com</option>
+              <option value="twc.com">twc.com</option>
+              <option value="suddenlink.net">suddenlink.net</option>
+            </select>
           </div>
 
           <div class="field-row">
@@ -113,7 +140,7 @@
         </form>
       </section>
 
-      <!-- right: results panel -->
+      <!-- RIGHT: results -->
       <section class="panel result-panel" id="result-panel">
 
         <div class="panel-header">
@@ -121,19 +148,19 @@
           <span class="panel-title">Analysis Result</span>
         </div>
 
-        <!-- idle state -->
+        <!-- idle -->
         <div class="idle-state" id="idle-state">
           <div class="idle-icon">◈</div>
           <p>Awaiting transaction data.<br/>Submit parameters to begin analysis.</p>
         </div>
 
-        <!-- loading state -->
+        <!-- loading -->
         <div class="loading-state hidden" id="loading-state">
           <div class="loader-ring"></div>
           <p class="loader-text">ANALYSING TRANSACTION<span class="dots"></span></p>
         </div>
 
-        <!-- result state -->
+        <!-- result -->
         <div class="result-state hidden" id="result-state">
 
           <div class="verdict-block" id="verdict-block">
@@ -151,14 +178,38 @@
             </div>
           </div>
 
+          <!-- threshold control -->
+          <div class="threshold-control">
+            <div class="threshold-header">
+              <span class="threshold-label">DECISION THRESHOLD</span>
+              <div class="threshold-val-wrap">
+                <input
+                  type="number"
+                  id="threshold-input"
+                  min="0.01" max="99.99"
+                  step="0.01"
+                  placeholder="66.4"
+                />
+                <span class="threshold-pct">%</span>
+              </div>
+            </div>
+            <input type="range" id="threshold-slider"
+              min="1" max="99" step="1" value="66" />
+            <div class="threshold-hints">
+              <span>1% — catch everything</span>
+              <span>99% — only certain fraud</span>
+            </div>
+            <button class="reeval-btn" id="reeval-btn">RE-EVALUATE AT THIS THRESHOLD →</button>
+          </div>
+
           <div class="meta-grid">
             <div class="meta-item">
               <span class="meta-label">RISK LEVEL</span>
               <span class="meta-value" id="risk-level">—</span>
             </div>
             <div class="meta-item">
-              <span class="meta-label">THRESHOLD</span>
-              <span class="meta-value" id="threshold-val">—</span>
+              <span class="meta-label">THRESHOLD USED</span>
+              <span class="meta-value" id="threshold-display">—</span>
             </div>
             <div class="meta-item">
               <span class="meta-label">DECISION</span>
@@ -176,7 +227,6 @@
 
     </main>
 
-    <!-- bottom stats bar -->
     <footer class="stats-bar">
       <div class="stat">
         <span class="stat-label">DATASET</span>

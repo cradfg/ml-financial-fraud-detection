@@ -1,6 +1,8 @@
-const API_URL = "http://localhost:8000/predict"; // change to Render URL before deploying
+const API_URL = "http://localhost:8000/predict"; // replace with Render URL before deploying
 
-let requestCount = 0;
+let requestCount  = 0;
+let lastProb      = null;   // store last fraud probability for re-evaluation
+let modelThreshold = null;  // threshold returned by the model
 
 const form       = document.getElementById("fraud-form");
 const scanBtn    = document.getElementById("scan-btn");
@@ -10,14 +12,33 @@ const idleState    = document.getElementById("idle-state");
 const loadingState = document.getElementById("loading-state");
 const resultState  = document.getElementById("result-state");
 
-const verdictBlock = document.getElementById("verdict-block");
-const verdictLabel = document.getElementById("verdict-label");
-const verdictText  = document.getElementById("verdict-text");
-const probValue    = document.getElementById("prob-value");
-const probBar      = document.getElementById("prob-bar");
-const riskLevel    = document.getElementById("risk-level");
-const thresholdVal = document.getElementById("threshold-val");
-const decisionVal  = document.getElementById("decision-val");
+const verdictBlock    = document.getElementById("verdict-block");
+const verdictLabel    = document.getElementById("verdict-label");
+const verdictText     = document.getElementById("verdict-text");
+const probValue       = document.getElementById("prob-value");
+const probBar         = document.getElementById("prob-bar");
+const riskLevel       = document.getElementById("risk-level");
+const thresholdDisplay = document.getElementById("threshold-display");
+const decisionVal     = document.getElementById("decision-val");
+
+const thresholdSlider = document.getElementById("threshold-slider");
+const thresholdInput  = document.getElementById("threshold-input");
+const reevalBtn       = document.getElementById("reeval-btn");
+
+// ── Threshold controls sync ───────────────────────────────────────────────
+
+thresholdSlider.addEventListener("input", () => {
+  thresholdInput.value = parseFloat(thresholdSlider.value).toFixed(2);
+});
+
+thresholdInput.addEventListener("input", () => {
+  let v = parseFloat(thresholdInput.value);
+  if (isNaN(v)) return;
+  v = Math.min(99.99, Math.max(0.01, v));
+  thresholdSlider.value = Math.round(v);
+});
+
+// ── Helpers ───────────────────────────────────────────────────────────────
 
 function setState(state) {
   idleState.classList.add("hidden");
@@ -32,13 +53,22 @@ function getBarColor(prob) {
   return "#ff3b5c";
 }
 
-function renderResult(data) {
-  const prob     = data.fraud_probability;
-  const isFraud  = data.is_fraud;
-  const risk     = data.risk_level;
-  const thresh   = data.threshold_used;
+function getUserThreshold() {
+  const v = parseFloat(thresholdInput.value);
+  if (!isNaN(v) && v > 0 && v < 100) return v / 100;
+  return modelThreshold;
+}
 
-  // verdict
+function applyVerdict(prob, threshold) {
+  const isFraud = prob >= threshold;
+
+  // risk level based on prob alone
+  let risk;
+  if (prob < 0.3)       risk = "LOW";
+  else if (prob < 0.6)  risk = "MEDIUM";
+  else                  risk = "HIGH";
+
+  // verdict display
   verdictBlock.className = "verdict-block";
   if (isFraud) {
     verdictBlock.classList.add("fraud");
@@ -54,6 +84,24 @@ function renderResult(data) {
     verdictText.textContent  = "Transaction appears normal — no anomalies detected";
   }
 
+  // meta
+  riskLevel.textContent     = risk;
+  riskLevel.style.color     = risk === "HIGH" ? "#ff3b5c" : risk === "MEDIUM" ? "#ffb547" : "#00ff9d";
+  thresholdDisplay.textContent = (threshold * 100).toFixed(2) + "%";
+  decisionVal.textContent   = isFraud ? "BLOCKED" : "APPROVED";
+  decisionVal.style.color   = isFraud ? "#ff3b5c" : "#00ff9d";
+}
+
+function renderResult(data) {
+  const prob      = data.fraud_probability;
+  modelThreshold  = data.threshold_used;
+  lastProb        = prob;
+
+  // set slider to model threshold on first result
+  const pct = Math.round(modelThreshold * 100);
+  thresholdSlider.value = pct;
+  thresholdInput.value  = (modelThreshold * 100).toFixed(2);
+
   // probability bar
   probValue.textContent = (prob * 100).toFixed(2) + "%";
   setTimeout(() => {
@@ -61,22 +109,28 @@ function renderResult(data) {
     probBar.style.background = getBarColor(prob);
   }, 100);
 
-  // meta
-  riskLevel.textContent  = risk;
-  riskLevel.style.color  = risk === "HIGH" ? "#ff3b5c" : risk === "MEDIUM" ? "#ffb547" : "#00ff9d";
-  thresholdVal.textContent = (thresh * 100).toFixed(1) + "%";
-  decisionVal.textContent  = isFraud ? "BLOCKED" : "APPROVED";
-  decisionVal.style.color  = isFraud ? "#ff3b5c" : "#00ff9d";
-
+  applyVerdict(prob, modelThreshold);
   setState("result");
 }
+
+// ── Re-evaluate at custom threshold ──────────────────────────────────────
+
+reevalBtn.addEventListener("click", () => {
+  if (lastProb === null) return;
+  const customThreshold = getUserThreshold();
+  applyVerdict(lastProb, customThreshold);
+
+  // animate bar color update
+  probBar.style.background = getBarColor(lastProb);
+});
+
+// ── Form submit ───────────────────────────────────────────────────────────
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   setState("loading");
   scanBtn.disabled = true;
 
-  // build payload — only send non-empty fields
   const raw = {
     TransactionAmt: parseFloat(form.TransactionAmt.value) || null,
     card4:          form.card4.value          || null,
@@ -86,7 +140,6 @@ form.addEventListener("submit", async (e) => {
     DeviceType:     form.DeviceType.value     || null,
   };
 
-  // remove nulls
   const payload = Object.fromEntries(
     Object.entries(raw).filter(([_, v]) => v !== null)
   );
@@ -116,7 +169,7 @@ form.addEventListener("submit", async (e) => {
     probValue.textContent    = "—";
     probBar.style.width      = "0%";
     riskLevel.textContent    = "—";
-    thresholdVal.textContent = "—";
+    thresholdDisplay.textContent = "—";
     decisionVal.textContent  = "—";
   } finally {
     scanBtn.disabled = false;
