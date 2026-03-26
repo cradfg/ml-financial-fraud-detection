@@ -6,7 +6,9 @@ COPY app/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app/ ./app/
-COPY models/ ./models/
+COPY download_models.py .
+
+RUN python download_models.py
 
 EXPOSE 8000
 
