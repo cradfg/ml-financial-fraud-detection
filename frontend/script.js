@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8000/predict"; // replace with Render URL before deploying
+const API_URL = "https://model-financial-crime-detection.onrender.com/predict"; // this the deployed url of the project on render
 
 let requestCount  = 0;
 let lastProb      = null;   // store last fraud probability for re-evaluation
