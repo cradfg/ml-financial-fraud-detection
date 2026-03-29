@@ -15,7 +15,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5500",         # live server local dev
         "http://127.0.0.1:5500",
-        "https://github.com/cradfg", # My github page
+        "https://cradfg.github.io", # My github page
     ],
     allow_methods=["POST", "GET"],
     allow_headers=["Content-Type"],
